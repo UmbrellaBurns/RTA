@@ -114,10 +114,14 @@ class MainWindow(QMainWindow):
             self.__left_bar.clear()
             self.__left_bar.addItem('Документ')
 
-            for i in range(1, self.__stacked_widget.count()):
+            i = self.__stacked_widget.count()
+
+            for i in range(self.__stacked_widget.count() - 1, 0, -1):
                 widget = self.__stacked_widget.widget(i)
                 self.__stacked_widget.removeWidget(widget)
+                widget.deleteLater()
 
+            i = self.__stacked_widget.count()
             # Start analysis
             self.__start_analysis()
 
