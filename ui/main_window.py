@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QHBoxLayout, QVBoxLayout, QWidget, QPushButton, QTextEdit, \
-     QMenu, QAction, QStyle, qApp, QListWidget, QStackedWidget, QFormLayout, QSplitter, QFileDialog
+    QMenu, QAction, QStyle, qApp, QListWidget, QStackedWidget, QFormLayout, QSplitter, QFileDialog
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
 from solarix_parser.syntax import SyntaxAnalyzer
@@ -9,10 +9,11 @@ from ui.graphematical import GraphematicalAnalysisWidget
 from morphological_analysis.morphological import MorphologicalAnalysis
 from morphological_analysis.morphological_markup import MorphologicalMarkup
 from ui.morphological import MorphologicalAnalysisWidget
+from statistical_analysis.statistical import StatisticalAnalysis
+from ui.statistical import StatisticalAnalysisWidget
 
 
 class MainWindow(QMainWindow):
-
     def __init__(self):
         QMainWindow.__init__(self)
 
@@ -20,20 +21,20 @@ class MainWindow(QMainWindow):
 
         self.__doc = None
 
-        self.__left_bar = None        # list widget, which can change widgets on a __stacked_widget
+        self.__left_bar = None  # list widget, which can change widgets on a __stacked_widget
         self.__stacked_widget = None  # stacked widget, which contains results of analysis
 
         # __stacked_widget items
-        self.__text_edit = None       # source text editor
+        self.__text_edit = None  # source text editor
         self.__graphematical = None  # graphematical analyser
         self.__morphological = None  # morphological analyser
-        self.__statistical = None    # statistical analyser
-        self.__syntactical = None    # syntactical analyser
-        self.__semantic = None       # semantic analyser
-        self.__complex = None        # complex analyser, which includes all of previous
+        self.__statistical = None  # statistical analyser
+        self.__syntactical = None  # syntactical analyser
+        self.__semantic = None  # semantic analyser
+        self.__complex = None  # complex analyser, which includes all of previous
 
         self.__tasks_queue = None
-        
+
         # Setup Ui
         self.__setup_ui()
 
@@ -125,10 +126,10 @@ class MainWindow(QMainWindow):
         # Reset all
         self.__graphematical = None  # graphematical analyser
         self.__morphological = None  # morphological analyser
-        self.__statistical = None    # statistical analyser
-        self.__syntactical = None    # syntactical analyser
-        self.__semantic = None       # semantic analyser
-        self.__complex = None        # complex analyser, which includes all of previous
+        self.__statistical = None  # statistical analyser
+        self.__syntactical = None  # syntactical analyser
+        self.__semantic = None  # semantic analyser
+        self.__complex = None  # complex analyser, which includes all of previous
 
         if self.__action_complex.isChecked():
             # Processing all of analysis
@@ -174,6 +175,30 @@ class MainWindow(QMainWindow):
                 self.__stacked_widget.addWidget(morphological_widget)
                 morphological_widget.show()
 
+            if self.__action_statistical.isChecked():
+                self.__statistical = StatisticalAnalysis(text=self.__text_edit.toPlainText())
+
+                # Processing statistical analysis
+                self.__statistical.analysis()
+
+                # Setup View
+                statistical_widget = StatisticalAnalysisWidget()
+
+                semantic_core = self.__statistical.get_words_frequency(10)
+                words_frequency = self.__statistical.get_words_frequency()
+
+                category = self.__statistical.get_text_category()
+                chars_count = self.__statistical.get_characters_count()
+                chars_count_without_spaces = self.__statistical.get_characters_count_without_spaces()
+                words_count = self.__statistical.get_words_count()
+
+                statistical_widget.load_from_dict(semantic_core, words_frequency)
+                statistical_widget.load_statistical_data(category, chars_count, chars_count_without_spaces, words_count)
+
+                self.__left_bar.addItem('Статистический анализ')
+                self.__stacked_widget.addWidget(statistical_widget)
+                statistical_widget.show()
+
     def __text_processing(self):
 
         text = self.text_edit.toPlainText()
@@ -183,7 +208,3 @@ class MainWindow(QMainWindow):
 
         syntax_analyzer = SyntaxAnalyzer('input.txt')
         syntax_analyzer.analyze()
-
-
-
-

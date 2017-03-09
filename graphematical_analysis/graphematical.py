@@ -74,7 +74,7 @@ class GraphematicalAnalyser:
             self.__tokenization_result.append(new_token)
 
         # Removing unicode special character in first token
-        self.__tokenization_result[0] = self.__tokenization_result[0][1:]
+        # self.__tokenization_result[0] = self.__tokenization_result[0][1:]
 
         quotes = OrderedDict()
 

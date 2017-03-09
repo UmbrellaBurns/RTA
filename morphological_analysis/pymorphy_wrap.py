@@ -8,6 +8,19 @@ class MorphAnalyzer:
         def parse(self, string):
             return self.morph.parse(string)
 
+        def get_best_parse_result(self, string):
+            target = self.morph.parse(string)
+
+            max_score = target[0].score
+            parse_number = 0
+
+            for i in range(1, len(target)):
+                if target[i].score > max_score:
+                    max_score = target[i].score
+                    parse_number = i
+
+            return target[parse_number]
+
     __instance = None
 
     def __init__(self):
