@@ -12,4 +12,5 @@ Dependencies:
  - python3.6
  - Qt5.7 & PyQt5 module
  - pymorphy2
+ - sklearn (+ SciPy, Numpy)
  -  [solarix syntax parser](http://www.solarix.ru/parser.shtml)
