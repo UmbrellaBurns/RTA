@@ -24,7 +24,7 @@ class StatisticalAnalysis:
     - Creation of semantic core
     - Statistical information about the text
     """
-    def __init__(self, text):
+    def __init__(self, text=None):
         self.__text = text
 
         self.__tokens = None
@@ -39,12 +39,14 @@ class StatisticalAnalysis:
 
         self.__common_dir = os.getcwd() + '/common/'
 
-        self.__pre_processing()
+        self.train_classifier()
 
     def analysis(self):
         """
         Complex statistical analysis
         """
+
+        self.__pre_processing()
 
         unsorted_frequency = {}
 
@@ -62,6 +64,9 @@ class StatisticalAnalysis:
         processed_text = self.__text_cleaner_with_stemming(self.__text)
 
         self.__category = self.__predict(text=processed_text)
+
+    def set_text(self, text):
+        self.__text = text
 
     def get_words_frequency(self, number=None):
         """
@@ -100,16 +105,10 @@ class StatisticalAnalysis:
         """
         return self.__get_cyr_category_repr(self.__category)
 
-    def __pre_processing(self):
+    def train_classifier(self):
         """
-        Text tokenization. Text classifier initialization
+        Loading classifier data and training the classifier
         """
-
-        blob = TextBlob(self.__text_cleaner(self.__text))
-        self.__tokens = list(blob.tokens)
-
-        self.__normalize_tokens()
-
         data = self.__load_classifier_data()
 
         # Cleaning the training data
@@ -126,6 +125,16 @@ class StatisticalAnalysis:
         ])
 
         self.__text_classifier.fit(d['train']['x'], d['train']['y'])
+
+    def __pre_processing(self):
+        """
+        Text tokenization. Text classifier initialization
+        """
+
+        blob = TextBlob(self.__text_cleaner(self.__text))
+        self.__tokens = list(blob.tokens)
+
+        self.__normalize_tokens()
 
     def __predict(self, text):
         """
@@ -204,6 +213,32 @@ class StatisticalAnalysis:
             return "НЕДВИЖИМОСТЬ"
         elif category == TextCategory.SCIENCE:
             return "НАУКА"
+
+    def __update_classifier_data(self, text, category):
+        """
+        Update rss-all.sqlite database
+        :param text: mew text
+        :param category: the category of the text
+        """
+
+        db_name = self.__common_dir + 'rss-all.sqlite'
+
+        conn = sqlite3.connect(db_name)
+        try:
+            c = conn.cursor()
+
+            sql_insert = """
+                INSERT INTO data VALUES(null, ?, ?)
+            """
+
+            target_text = (text, category)
+
+            c.execute(sql_insert, target_text)
+        finally:
+            conn.close()
+
+            # update classifier
+            self.train_classifier()
 
     def __load_classifier_data(self):
         """

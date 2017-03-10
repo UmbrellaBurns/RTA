@@ -7,8 +7,8 @@ import re
 import os
 
 
-class GraphematicalAnalyser:
-    def __init__(self, text):
+class GraphematicalAnalysis:
+    def __init__(self, text=None):
         self.__text = text
 
         self.__blob = None
@@ -43,9 +43,12 @@ class GraphematicalAnalyser:
 
         self.__regexp_dir = os.getcwd() + '/common/'
 
-        self.__pre_processing()
-
     def __pre_processing(self):
+
+        # Clear all previous results
+
+        self.__tokens = []
+        self.__tokenization_result = []
 
         # Extract all of emails & replace them with '__EMAIL'
         self.__emails = self.extract_email_addresses(self.__text)
@@ -104,6 +107,8 @@ class GraphematicalAnalyser:
             self.__tokenization_result.insert(key, quotes[key])
 
     def analysis(self):
+
+        self.__pre_processing()
 
         current_email = 0
         current_hash_tag = 0
@@ -253,6 +258,9 @@ class GraphematicalAnalyser:
     def extract_hash_tags(string):
         r = re.compile(r'#\w*')
         return r.findall(string)
+
+    def set_text(self, text):
+        self.__text = text
 
     def get_tokens(self):
         # self.__tokens.pop()

@@ -1,8 +1,8 @@
-import sys, time
-from PyQt5.QtCore import Qt, QTimer
+import sys
+import time
 
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QSplashScreen, QApplication, QWidget
+from PyQt5.QtWidgets import QSplashScreen
 
 
 class SplashScreen(QSplashScreen):

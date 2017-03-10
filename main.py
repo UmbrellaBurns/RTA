@@ -2,19 +2,28 @@ from PyQt5.QtWidgets import QApplication
 from ui.main_window import MainWindow
 from ui.splash_screen import SplashScreen
 import sys
+import threading
+
+
+def create_window(w):
+    w = MainWindow()
 
 
 if __name__ == '__main__':
     if __name__ == "__main__":
         app = QApplication(sys.argv)
 
+        threads = 2
+
+        tasks = []
+
         s = SplashScreen("common/splash.gif")
         s.show()
+        s.processing(5, app)
 
         w = MainWindow()
         w.resize(700, 500)
 
-        s.processing(7, app)
         s.finish(w)
 
         w.show()

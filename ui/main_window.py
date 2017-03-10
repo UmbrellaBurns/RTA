@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QHBoxLayout, QVBoxLayout, 
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
 from solarix_parser.syntax import SyntaxAnalyzer
-from graphematical_analysis.graphematical import GraphematicalAnalyser
+from graphematical_analysis.graphematical import GraphematicalAnalysis
 from graphematical_analysis.graphematical_markup import GraphematicalMarkup
 from ui.graphematical import GraphematicalAnalysisWidget
 from morphological_analysis.morphological import MorphologicalAnalysis
@@ -25,10 +25,10 @@ class MainWindow(QMainWindow):
         self.__stacked_widget = None  # stacked widget, which contains results of analysis
 
         # __stacked_widget items
-        self.__text_edit = None  # source text editor
-        self.__graphematical = None  # graphematical analyser
-        self.__morphological = None  # morphological analyser
-        self.__statistical = None  # statistical analyser
+        self.__text_edit = QTextEdit()  # source text editor
+        self.__graphematical = GraphematicalAnalysis()  # graphematical analyser
+        self.__morphological = MorphologicalAnalysis()  # morphological analyser
+        self.__statistical = StatisticalAnalysis()  # statistical analyser
         self.__syntactical = None  # syntactical analyser
         self.__semantic = None  # semantic analyser
         self.__complex = None  # complex analyser, which includes all of previous
@@ -84,7 +84,6 @@ class MainWindow(QMainWindow):
         help = bar.addMenu("Помощь")
 
         # analysers creating & setup
-        self.__text_edit = QTextEdit()
         self.__left_bar.addItem('Документ')
         self.__stacked_widget.addWidget(self.__text_edit)
 
@@ -128,12 +127,12 @@ class MainWindow(QMainWindow):
     def __start_analysis(self):
 
         # Reset all
-        self.__graphematical = None  # graphematical analyser
-        self.__morphological = None  # morphological analyser
-        self.__statistical = None  # statistical analyser
-        self.__syntactical = None  # syntactical analyser
-        self.__semantic = None  # semantic analyser
-        self.__complex = None  # complex analyser, which includes all of previous
+        # self.__graphematical = None  # graphematical analyser
+        # self.__morphological = None  # morphological analyser
+        # self.__statistical = None  # statistical analyser
+        # self.__syntactical = None  # syntactical analyser
+        # self.__semantic = None  # semantic analyser
+        # self.__complex = None  # complex analyser, which includes all of previous
 
         if self.__action_complex.isChecked():
             # Processing all of analysis
@@ -141,7 +140,7 @@ class MainWindow(QMainWindow):
         else:
             if self.__action_graphematical.isChecked():
                 # Processing graphematical analysis
-                self.__graphematical = GraphematicalAnalyser(text=self.__text_edit.toPlainText())
+                self.__graphematical.set_text(text=self.__text_edit.toPlainText())
                 self.__graphematical.analysis()
 
                 # Building markup
@@ -159,12 +158,10 @@ class MainWindow(QMainWindow):
 
             if self.__action_morphological.isChecked():
 
-                if self.__graphematical is not None:
-                    self.__morphological = MorphologicalAnalysis(text=self.__text_edit.toPlainText(),
-                                                                 tokens=self.__graphematical.get_tokens())
-
+                if self.__action_graphematical.isChecked():
+                    self.__morphological.set_tokens(self.__graphematical.get_tokens())
                 else:
-                    self.__morphological = MorphologicalAnalysis(text=self.__text_edit.toPlainText())
+                    self.__morphological.set_text(self.__text_edit.toPlainText())
 
                 # Processing morphological analysis
                 self.__morphological.analysis()
@@ -180,7 +177,7 @@ class MainWindow(QMainWindow):
                 morphological_widget.show()
 
             if self.__action_statistical.isChecked():
-                self.__statistical = StatisticalAnalysis(text=self.__text_edit.toPlainText())
+                self.__statistical.set_text(self.__text_edit.toPlainText())
 
                 # Processing statistical analysis
                 self.__statistical.analysis()

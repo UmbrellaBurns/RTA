@@ -1,29 +1,29 @@
 from morphological_analysis.pymorphy_wrap import MorphAnalyzer
 from common.e_label import Grapheme, Label, Morph
-from graphematical_analysis.graphematical import GraphematicalAnalyser
+from graphematical_analysis.graphematical import GraphematicalAnalysis
 
 
 class MorphologicalAnalysis:
-    def __init__(self, text, tokens=None):
+    def __init__(self, text=None, tokens=None):
         self.__text = text
 
         self.__tokens = tokens
 
         self.__morph_analyzer = MorphAnalyzer()
 
-        self.__pre_processing()
-
         self.__doc = None
 
     def __pre_processing(self):
 
         if self.__tokens is None:
-            graphematic_analyzer = GraphematicalAnalyser(text=self.__text)
+            graphematic_analyzer = GraphematicalAnalysis(text=self.__text)
             graphematic_analyzer.analysis()
             self.__tokens = graphematic_analyzer.get_tokens()
             self.__doc = graphematic_analyzer.get_document()
 
     def analysis(self):
+
+        self.__pre_processing()
 
         # Add morph descriptors for each token in the text
         for token in self.__tokens:
@@ -116,6 +116,12 @@ class MorphologicalAnalysis:
             if source[i] in dictionary:
                 return True
         return False
+
+    def set_text(self, text):
+        self.__text = text
+
+    def set_tokens(self, tokens):
+        self.__tokens = tokens
 
     def get_tokens(self):
         # self.__tokens.pop()
