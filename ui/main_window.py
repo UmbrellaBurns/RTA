@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QGridLayout, QHBoxLayout, QVBoxLayout, QWidget, QPushButton, QTextEdit, \
-    QMenu, QAction, QStyle, qApp, QListWidget, QStackedWidget, QFormLayout, QSplitter, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QVBoxLayout, QWidget, QPushButton, QTextEdit, \
+    QMenu, QAction, QStyle, qApp, QListWidget, QStackedWidget, QFormLayout, QSplitter, QFileDialog, QProgressBar
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
 from solarix_parser.syntax import SyntaxAnalyzer
@@ -11,6 +11,7 @@ from morphological_analysis.morphological_markup import MorphologicalMarkup
 from ui.morphological import MorphologicalAnalysisWidget
 from statistical_analysis.statistical import StatisticalAnalysis
 from ui.statistical import StatisticalAnalysisWidget
+from ui.progress_bar import ProgressBar
 
 
 class MainWindow(QMainWindow):
@@ -23,6 +24,9 @@ class MainWindow(QMainWindow):
 
         self.__left_bar = None  # list widget, which can change widgets on a __stacked_widget
         self.__stacked_widget = None  # stacked widget, which contains results of analysis
+
+        self.__progress_bar = ProgressBar()
+        self.__status_message = QLabel()
 
         # __stacked_widget items
         self.__text_edit = QTextEdit()  # source text editor
@@ -46,6 +50,10 @@ class MainWindow(QMainWindow):
         # central widget setup
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
+
+        # update status bar
+        self.statusBar().show()
+        self.statusBar().showMessage("Загрузка компонентов завершена", 4000)
 
         # left bar & stacked widget setup
         self.__left_bar = QListWidget(central_widget)
@@ -98,6 +106,9 @@ class MainWindow(QMainWindow):
     def __display(self, i):
         self.__stacked_widget.setCurrentIndex(i)
 
+    def __show_on_status_bar(self, message):
+        self.__status_message.setText(message)
+
     def __open_file(self):
         file_name = QFileDialog.getOpenFileName(self, 'Открыть файл', '')[0]
 
@@ -113,18 +124,21 @@ class MainWindow(QMainWindow):
             self.__left_bar.clear()
             self.__left_bar.addItem('Документ')
 
-            i = self.__stacked_widget.count()
-
             for i in range(self.__stacked_widget.count() - 1, 0, -1):
                 widget = self.__stacked_widget.widget(i)
                 self.__stacked_widget.removeWidget(widget)
                 widget.deleteLater()
 
-            i = self.__stacked_widget.count()
             # Start analysis
             self.__start_analysis()
 
     def __start_analysis(self):
+
+        self.__show_on_status_bar("Анализ..")
+        self.statusBar().addWidget(self.__status_message, 2)
+        self.statusBar().addWidget(self.__progress_bar, 1)
+
+        self.__progress_bar.set_value(0)
 
         # Reset all
         # self.__graphematical = None  # graphematical analyser
@@ -139,6 +153,10 @@ class MainWindow(QMainWindow):
             pass
         else:
             if self.__action_graphematical.isChecked():
+
+                # update status bar
+                self.__show_on_status_bar("Графематический анализ..")
+
                 # Processing graphematical analysis
                 self.__graphematical.set_text(text=self.__text_edit.toPlainText())
                 self.__graphematical.analysis()
@@ -156,7 +174,12 @@ class MainWindow(QMainWindow):
                 # Get document from graphematical analyser
                 self.__doc = self.__graphematical.get_document()
 
+            self.__progress_bar.set_value(20)
+
             if self.__action_morphological.isChecked():
+
+                # update status bar
+                self.__show_on_status_bar("Морфологический анализ..")
 
                 if self.__action_graphematical.isChecked():
                     self.__morphological.set_tokens(self.__graphematical.get_tokens())
@@ -176,7 +199,13 @@ class MainWindow(QMainWindow):
                 self.__stacked_widget.addWidget(morphological_widget)
                 morphological_widget.show()
 
+            self.__progress_bar.set_value(45)
+
             if self.__action_statistical.isChecked():
+
+                # update status bar
+                self.__show_on_status_bar("Статистический анализ..")
+
                 self.__statistical.set_text(self.__text_edit.toPlainText())
 
                 # Processing statistical analysis
@@ -199,6 +228,9 @@ class MainWindow(QMainWindow):
                 self.__left_bar.addItem('Статистический анализ')
                 self.__stacked_widget.addWidget(statistical_widget)
                 statistical_widget.show()
+
+            self.__show_on_status_bar("Готово")
+            self.__progress_bar.set_value(100)
 
     def __text_processing(self):
 
