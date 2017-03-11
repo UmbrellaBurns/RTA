@@ -237,7 +237,7 @@ class GraphematicalAnalysis:
     @staticmethod
     def extract_email_addresses(string):
 
-        r = re.compile(r'[\w.-]+@[\w.-]+.\w{2,4}')
+        r = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-z]{2,5})")
         return r.findall(string)
 
     @staticmethod
