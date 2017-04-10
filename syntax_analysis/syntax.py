@@ -3,30 +3,91 @@ from syntax_analysis.tree_to_graphviz import TreeToGraphviz
 from PyQt5 import QtWidgets, QtSvg
 from PyQt5.Qt import QByteArray
 import sys
+import os
+import subprocess
 
 
-if __name__ == '__main__':
+class SyntaxAnalysis:
+    """
+    Syntax analysis module:
+    """
+    def __init__(self, text=None):
+        self.__text = text
 
-    app = QtWidgets.QApplication(sys.argv)
+        self.__parser = None
 
-    file = 'parsing-tree.xml'
+        self.__tree_to_graphviz = None
 
-    parser = XmlToTree(file)
+        self.__sentences = None
 
-    sentences = parser.parse()
+    def set_text(self, text):
+        self.__text = text
 
-    tree_to_graphviz = TreeToGraphviz()
+    def __pre_processing(self):
+        """
+        Create text file and parse it with solarix parser.
+        Next - parse xml tree and visualize it with graphviz.
+        :return xml syntax tree
+        """
 
-    svg = tree_to_graphviz.get_svg_tree(sentences[0])
+        output = os.getcwd() + '/parsing-tree.xml'
+        parser_dir = os.getcwd() + '/solarix_parser/'
 
-    byte_array = QByteArray()
-    byte_array.append(svg)
+        input_file = parser_dir + 'input.txt'
 
-    svg_view = QtSvg.QSvgWidget()
+        with open(input_file, 'w', encoding='utf-8') as f:
+            f.write(self.__text)
 
-    svg_view.load(byte_array)
+        cmd = parser_dir + 'Parser.exe -parser 0 -emit_morph 0 -eol -d ' \
+              + parser_dir + 'dictionary.xml ' + input_file + ' -o ' \
+              + output
 
-    svg_view.show()
+        PIPE = subprocess.PIPE
+        p = subprocess.Popen(cmd, shell=False)
+        p.wait()
 
-    sys.exit(app.exec_())
+        return output
+
+    def get_triples(self):
+        """
+        :return: List of triples -> [Node, Relation, Node]
+        """
+
+        triples = []
+
+        if self.__sentences is not None:
+            for sentence in self.__sentences:
+
+                # Get syntax tree of each sentence
+                tree = sentence.get_syntax_tree()
+
+                for node in tree.get_nodes():
+                    if node.get_parent() is not None:
+                        triples.append([node.get_parent().get_word(), node.get_link_type(), node.get_word()])
+
+        return triples
+
+    def analysis(self):
+        """
+        Syntax analysis
+        :return dict {sentences[] : svg_trees[]}
+        """
+
+        xml = self.__pre_processing()
+
+        self.__parser = XmlToTree(xml)
+
+        self.__sentences = self.__parser.parse()
+
+        self.__tree_to_graphviz = TreeToGraphviz()
+
+        # Sentence => SVG-tree
+        data = {}
+
+        for sentence in self.__sentences:
+            svg = self.__tree_to_graphviz.get_svg_tree(sentence)
+            data[sentence.get_text()] = svg
+
+        return data
+
 

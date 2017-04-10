@@ -11,7 +11,11 @@ from morphological_analysis.morphological_markup import MorphologicalMarkup
 from ui.morphological import MorphologicalAnalysisWidget
 from statistical_analysis.statistical import StatisticalAnalysis
 from ui.statistical import StatisticalAnalysisWidget
+from syntax_analysis.syntax import SyntaxAnalysis
+from ui.syntax import SyntaxAnalysisWidget
 from ui.progress_bar import ProgressBar
+from ui.semantical import SemanticAnalysisWidget
+from semantical_analysis.graph_model import Graph, Node
 
 
 class MainWindow(QMainWindow):
@@ -33,11 +37,11 @@ class MainWindow(QMainWindow):
         self.__graphematical = GraphematicalAnalysis()  # graphematical analyser
         self.__morphological = MorphologicalAnalysis()  # morphological analyser
         self.__statistical = StatisticalAnalysis()  # statistical analyser
-        self.__syntactical = None  # syntactical analyser
-        self.__semantic = None  # semantic analyser
-        self.__complex = None  # complex analyser, which includes all of previous
-
-        self.__tasks_queue = None
+        self.__syntax = SyntaxAnalysis()  # syntax analyser
+        self.__semantic = SemanticAnalysisWidget()  # semantic analyser
+        # self.__complex = None  # complex analyser, which includes all of previous
+        #
+        # self.__tasks_queue = None
 
         # Setup Ui
         self.__setup_ui()
@@ -58,7 +62,7 @@ class MainWindow(QMainWindow):
         # left bar & stacked widget setup
         self.__left_bar = QListWidget(central_widget)
         self.__stacked_widget = QStackedWidget(central_widget)
-        self.__left_bar.setMaximumWidth(150)
+        self.__left_bar.setMaximumWidth(250)
 
         self.__left_bar.currentRowChanged.connect(self.__display)  # change widget on a __stacked_widget
 
@@ -76,7 +80,7 @@ class MainWindow(QMainWindow):
         self.__action_graphematical = analysis.addAction("Графематический анализ")
         self.__action_morphological = analysis.addAction("Морфологический анализ")
         self.__action_statistical = analysis.addAction("Статистический анализ")
-        self.__action_syntactical = analysis.addAction("Синтаксический анализ")
+        self.__action_syntax = analysis.addAction("Синтаксический анализ")
         self.__action_semantic = analysis.addAction("Семантический анализ")
         self.__action_complex = analysis.addAction("Комплексный анализ")
 
@@ -85,7 +89,7 @@ class MainWindow(QMainWindow):
         self.__action_graphematical.setCheckable(True)
         self.__action_morphological.setCheckable(True)
         self.__action_statistical.setCheckable(True)
-        self.__action_syntactical.setCheckable(True)
+        self.__action_syntax.setCheckable(True)
         self.__action_semantic.setCheckable(True)
         self.__action_complex.setCheckable(True)
 
@@ -131,6 +135,9 @@ class MainWindow(QMainWindow):
 
             # Start analysis
             self.__start_analysis()
+
+    def __graphematical_analysis(self):
+        pass
 
     def __start_analysis(self):
 
@@ -228,6 +235,68 @@ class MainWindow(QMainWindow):
                 self.__left_bar.addItem('Статистический анализ')
                 self.__stacked_widget.addWidget(statistical_widget)
                 statistical_widget.show()
+
+            self.__progress_bar.set_value(63)
+                
+            if self.__action_syntax.isChecked():
+
+                # update status bar
+                self.__show_on_status_bar("Синтаксический анализ..")
+
+                self.__syntax.set_text(self.__text_edit.toPlainText())
+
+                # Processing statistical analysis
+                data = self.__syntax.analysis()
+
+                # Setup View
+                syntax_widget = SyntaxAnalysisWidget()
+
+                syntax_widget.load_data(data)
+
+                self.__left_bar.addItem('Синтаксический анализ')
+                self.__stacked_widget.addWidget(syntax_widget)
+                syntax_widget.show()
+
+            self.__progress_bar.set_value(79)
+
+            if self.__action_semantic.isChecked():
+                self.__show_on_status_bar("Семантический анализ..")
+
+                if not self.__action_syntax.isChecked():
+                    self.__syntax.set_text(self.__text_edit.toPlainText())
+
+                    # Processing statistical analysis
+                    self.__syntax.analysis()
+
+                    raw_triples = self.__syntax.get_triples()
+
+                else:
+                    raw_triples = self.__syntax.get_triples()
+
+                triples = []
+
+                for triple in raw_triples:
+                    if triple[1] in ['SUBJECT', 'OBJECT', 'ATTRIBUTE', 'RIGHT_GENITIVE_OBJECT']:
+                        triples.append([triple[0], triple[1], triple[2]])
+
+                model = Graph()
+
+                for triple in triples:
+                    c1 = Node(triple[0])
+                    c2 = Node(triple[2])
+
+                    link_type = triple[1]
+
+                    model.add_node(c1)
+                    model.add_node(c2)
+
+                    model.add_edge(c1, c2, link_type)
+
+                self.__semantic = SemanticAnalysisWidget()
+                self.__semantic.load_diagram_from_graph(model)
+                self.__left_bar.addItem('Семантический анализ')
+                self.__stacked_widget.addWidget(self.__semantic)
+                self.__semantic.show()
 
             self.__show_on_status_bar("Готово")
             self.__progress_bar.set_value(100)
