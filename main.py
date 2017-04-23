@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QApplication
 from ui.main_window import MainWindow
 from ui.splash_screen import SplashScreen
+from PyQt5.QtGui import QIcon
 import sys
 import threading
 
@@ -22,6 +23,7 @@ if __name__ == '__main__':
         s.processing(5, app)
 
         w = MainWindow()
+        w.setWindowIcon(QIcon('ico.png'))
         w.resize(700, 500)
 
         s.finish(w)

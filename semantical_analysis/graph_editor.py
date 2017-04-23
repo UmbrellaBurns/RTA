@@ -61,6 +61,9 @@ class GraphEditor(QWidget):
 
         self.diagramScene.clear()
 
+        num_of_edges = len(graph.edges)
+        scale = 10
+
         for edge in graph.edges:
             first_node = edge.from_node.text
             last_node = edge.to_node.text
@@ -70,10 +73,14 @@ class GraphEditor(QWidget):
             l = self.get_node_by_name(last_node)
 
             if f is None:
-                f = self.add_node(random.randint(-200, 200), random.randint(-200, 200), first_node)
+                x = random.randint(-num_of_edges * scale, num_of_edges)
+                y = random.randint(-num_of_edges * scale, num_of_edges)
+                f = self.add_node(x, y, first_node)
 
             if l is None:
-                l = self.add_node(random.randint(-200, 200), random.randint(-200, 200), last_node)
+                x = random.randint(-num_of_edges * scale, num_of_edges)
+                y = random.randint(-num_of_edges * scale, num_of_edges)
+                l = self.add_node(x, y, last_node)
 
             connection = Connection(f.get_random_port(), None, self)
             connection.set_link_type(link_type)
@@ -81,7 +88,7 @@ class GraphEditor(QWidget):
 
             self.connections.append(connection)
 
-        self.dump()
+        # self.dump()
 
         svg = QSvgGenerator()
         svg.setFileName('graph.svg')
@@ -143,7 +150,7 @@ class GraphEditor(QWidget):
     def mousePressEvent(self, event):
         if event.buttons() == QtCore.Qt.RightButton:
             self.add_block_item(self.diagramView.mapToScene(event.pos()))
-            self.dump()
+            # self.dump()
 
     def add_block_item(self, pos):
         text, ok = QInputDialog.getText(None, 'Добавить элемент', 'Введите название:')

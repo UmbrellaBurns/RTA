@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         # left bar & stacked widget setup
         self.__left_bar = QListWidget(central_widget)
         self.__stacked_widget = QStackedWidget(central_widget)
-        self.__left_bar.setMaximumWidth(250)
+        self.__left_bar.setMaximumWidth(200)
 
         self.__left_bar.currentRowChanged.connect(self.__display)  # change widget on a __stacked_widget
 
@@ -137,7 +137,153 @@ class MainWindow(QMainWindow):
             self.__start_analysis()
 
     def __graphematical_analysis(self):
-        pass
+        """
+        This method performs graphematical analysis and display results
+        """
+
+        # update status bar
+        self.__show_on_status_bar("Графематический анализ..")
+
+        # Processing graphematical analysis
+        self.__graphematical.set_text(text=self.__text_edit.toPlainText())
+        self.__graphematical.analysis()
+
+        # Building markup
+        graphematical_markup = GraphematicalMarkup()
+        graphematical_markup.generate_from_tokens(self.__graphematical.get_tokens())
+
+        # Setup View
+        graphematical_widget = GraphematicalAnalysisWidget(content=graphematical_markup.get_document())
+        self.__left_bar.addItem('Графематический анализ')
+        self.__stacked_widget.addWidget(graphematical_widget)
+        graphematical_widget.show()
+
+        # Get document from graphematical analyser
+        self.__doc = self.__graphematical.get_document()
+
+    def __morphological_analysis(self):
+        """
+        This method performs morphological analysis and display results
+        """
+
+        # update status bar
+        self.__show_on_status_bar("Морфологический анализ..")
+
+        if self.__action_graphematical.isChecked():
+            self.__morphological.set_tokens(self.__graphematical.get_tokens())
+        else:
+            self.__morphological.set_text(self.__text_edit.toPlainText())
+
+        # Processing morphological analysis
+        self.__morphological.analysis()
+
+        # Building markup
+        morphological_markup = MorphologicalMarkup()
+        morphological_markup.generate_from_tokens(self.__morphological.get_tokens())
+
+        # Setup View
+        morphological_widget = MorphologicalAnalysisWidget(content=morphological_markup.get_document())
+        self.__left_bar.addItem('Морфологический анализ')
+        self.__stacked_widget.addWidget(morphological_widget)
+        morphological_widget.show()
+
+    def __statistical_analysis(self):
+        """
+        This method performs statistical analysis and display results
+        """
+
+        # update status bar
+        self.__show_on_status_bar("Статистический анализ..")
+
+        self.__statistical.set_text(self.__text_edit.toPlainText())
+
+        # Processing statistical analysis
+        self.__statistical.analysis()
+
+        # Setup View
+        statistical_widget = StatisticalAnalysisWidget()
+
+        semantic_core = self.__statistical.get_words_frequency(10)
+        words_frequency = self.__statistical.get_words_frequency()
+
+        category = self.__statistical.get_text_category()
+        chars_count = self.__statistical.get_characters_count()
+        chars_count_without_spaces = self.__statistical.get_characters_count_without_spaces()
+        words_count = self.__statistical.get_words_count()
+
+        statistical_widget.load_from_dict(semantic_core, words_frequency)
+        statistical_widget.load_statistical_data(category, chars_count, chars_count_without_spaces, words_count)
+
+        self.__left_bar.addItem('Статистический анализ')
+        self.__stacked_widget.addWidget(statistical_widget)
+        statistical_widget.show()
+
+    def __syntactical_analysis(self):
+        """
+        This method performs syntactical analysis and display results
+        """
+
+        # update status bar
+        self.__show_on_status_bar("Синтаксический анализ..")
+
+        self.__syntax.set_text(self.__text_edit.toPlainText())
+
+        # Processing statistical analysis
+        data = self.__syntax.analysis()
+
+        # Setup View
+        syntax_widget = SyntaxAnalysisWidget()
+
+        syntax_widget.load_data(data)
+
+        self.__left_bar.addItem('Синтаксический анализ')
+        self.__stacked_widget.addWidget(syntax_widget)
+        syntax_widget.show()
+
+    def __semantic_analysis(self):
+        """
+        This method performs semantic analysis and display results
+        """
+
+        self.__show_on_status_bar("Семантический анализ..")
+
+        if not self.__action_syntax.isChecked():
+            self.__syntax.set_text(self.__text_edit.toPlainText())
+
+            # Processing statistical analysis
+            self.__syntax.analysis()
+
+            raw_triples = self.__syntax.get_triples()
+
+        else:
+            raw_triples = self.__syntax.get_triples()
+
+        triples = []
+
+        for triple in raw_triples:
+            if triple[1] in ['SUBJECT', 'OBJECT', 'ATTRIBUTE', 'RIGHT_GENITIVE_OBJECT', 'RHEMA']:
+                triples.append([triple[0], triple[1], triple[2]])
+
+        model = Graph()
+
+        for triple in triples:
+            c1 = Node(triple[0])
+            c2 = Node(triple[2])
+
+            link_type = triple[1]
+
+            model.add_node(c1)
+            model.add_node(c2)
+
+            model.add_edge(c1, c2, link_type)
+
+        # TODO: Randomize nodes position
+
+        self.__semantic = SemanticAnalysisWidget()
+        self.__semantic.load_diagram_from_graph(model)
+        self.__left_bar.addItem('Семантический анализ')
+        self.__stacked_widget.addWidget(self.__semantic)
+        self.__semantic.show()
 
     def __start_analysis(self):
 
@@ -157,156 +303,54 @@ class MainWindow(QMainWindow):
 
         if self.__action_complex.isChecked():
             # Processing all of analysis
-            pass
+
+            self.__graphematical_analysis()
+            self.__progress_bar.set_value(20)
+
+            self.__morphological_analysis()
+            self.__progress_bar.set_value(45)
+
+            self.__statistical_analysis()
+            self.__progress_bar.set_value(63)
+
+            self.__syntactical_analysis()
+            self.__progress_bar.set_value(79)
+
+            self.__semantic_analysis()
+            self.__show_on_status_bar("Готово")
+            self.__progress_bar.set_value(100)
+
         else:
+            # Processing selected types of analysis
+
             if self.__action_graphematical.isChecked():
 
-                # update status bar
-                self.__show_on_status_bar("Графематический анализ..")
-
-                # Processing graphematical analysis
-                self.__graphematical.set_text(text=self.__text_edit.toPlainText())
-                self.__graphematical.analysis()
-
-                # Building markup
-                graphematical_markup = GraphematicalMarkup()
-                graphematical_markup.generate_from_tokens(self.__graphematical.get_tokens())
-
-                # Setup View
-                graphematical_widget = GraphematicalAnalysisWidget(content=graphematical_markup.get_document())
-                self.__left_bar.addItem('Графематический анализ')
-                self.__stacked_widget.addWidget(graphematical_widget)
-                graphematical_widget.show()
-
-                # Get document from graphematical analyser
-                self.__doc = self.__graphematical.get_document()
+                self.__graphematical_analysis()
 
             self.__progress_bar.set_value(20)
 
             if self.__action_morphological.isChecked():
 
-                # update status bar
-                self.__show_on_status_bar("Морфологический анализ..")
-
-                if self.__action_graphematical.isChecked():
-                    self.__morphological.set_tokens(self.__graphematical.get_tokens())
-                else:
-                    self.__morphological.set_text(self.__text_edit.toPlainText())
-
-                # Processing morphological analysis
-                self.__morphological.analysis()
-
-                # Building markup
-                morphological_markup = MorphologicalMarkup()
-                morphological_markup.generate_from_tokens(self.__morphological.get_tokens())
-
-                # Setup View
-                morphological_widget = MorphologicalAnalysisWidget(content=morphological_markup.get_document())
-                self.__left_bar.addItem('Морфологический анализ')
-                self.__stacked_widget.addWidget(morphological_widget)
-                morphological_widget.show()
+                self.__morphological_analysis()
 
             self.__progress_bar.set_value(45)
 
             if self.__action_statistical.isChecked():
 
-                # update status bar
-                self.__show_on_status_bar("Статистический анализ..")
-
-                self.__statistical.set_text(self.__text_edit.toPlainText())
-
-                # Processing statistical analysis
-                self.__statistical.analysis()
-
-                # Setup View
-                statistical_widget = StatisticalAnalysisWidget()
-
-                semantic_core = self.__statistical.get_words_frequency(10)
-                words_frequency = self.__statistical.get_words_frequency()
-
-                category = self.__statistical.get_text_category()
-                chars_count = self.__statistical.get_characters_count()
-                chars_count_without_spaces = self.__statistical.get_characters_count_without_spaces()
-                words_count = self.__statistical.get_words_count()
-
-                statistical_widget.load_from_dict(semantic_core, words_frequency)
-                statistical_widget.load_statistical_data(category, chars_count, chars_count_without_spaces, words_count)
-
-                self.__left_bar.addItem('Статистический анализ')
-                self.__stacked_widget.addWidget(statistical_widget)
-                statistical_widget.show()
+                self.__statistical_analysis()
 
             self.__progress_bar.set_value(63)
                 
             if self.__action_syntax.isChecked():
 
-                # update status bar
-                self.__show_on_status_bar("Синтаксический анализ..")
-
-                self.__syntax.set_text(self.__text_edit.toPlainText())
-
-                # Processing statistical analysis
-                data = self.__syntax.analysis()
-
-                # Setup View
-                syntax_widget = SyntaxAnalysisWidget()
-
-                syntax_widget.load_data(data)
-
-                self.__left_bar.addItem('Синтаксический анализ')
-                self.__stacked_widget.addWidget(syntax_widget)
-                syntax_widget.show()
+                self.__syntactical_analysis()
 
             self.__progress_bar.set_value(79)
 
             if self.__action_semantic.isChecked():
-                self.__show_on_status_bar("Семантический анализ..")
 
-                if not self.__action_syntax.isChecked():
-                    self.__syntax.set_text(self.__text_edit.toPlainText())
-
-                    # Processing statistical analysis
-                    self.__syntax.analysis()
-
-                    raw_triples = self.__syntax.get_triples()
-
-                else:
-                    raw_triples = self.__syntax.get_triples()
-
-                triples = []
-
-                for triple in raw_triples:
-                    if triple[1] in ['SUBJECT', 'OBJECT', 'ATTRIBUTE', 'RIGHT_GENITIVE_OBJECT']:
-                        triples.append([triple[0], triple[1], triple[2]])
-
-                model = Graph()
-
-                for triple in triples:
-                    c1 = Node(triple[0])
-                    c2 = Node(triple[2])
-
-                    link_type = triple[1]
-
-                    model.add_node(c1)
-                    model.add_node(c2)
-
-                    model.add_edge(c1, c2, link_type)
-
-                self.__semantic = SemanticAnalysisWidget()
-                self.__semantic.load_diagram_from_graph(model)
-                self.__left_bar.addItem('Семантический анализ')
-                self.__stacked_widget.addWidget(self.__semantic)
-                self.__semantic.show()
+                self.__semantic_analysis()
 
             self.__show_on_status_bar("Готово")
             self.__progress_bar.set_value(100)
 
-    def __text_processing(self):
-
-        text = self.text_edit.toPlainText()
-
-        with open('input.txt', 'w', encoding='utf-8') as f:
-            f.write(text)
-
-        syntax_analyzer = SyntaxAnalyzer('input.txt')
-        syntax_analyzer.analyze()

@@ -1,12 +1,10 @@
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QDialog, QPushButton, QVBoxLayout, QGraphicsRectItem, \
-    QAction, QMenu, QGraphicsView, QGraphicsScene, QWidget, QApplication, QHBoxLayout, \
-    QFileDialog
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QAction, QMenu, QWidget, QFileDialog
 from PyQt5.QtSvg import QSvgGenerator
-from PyQt5.QtCore import QSize, QSizeF, QRect
+from PyQt5.QtCore import QSize, QRect
 from PyQt5.QtGui import QPainter
 from semantical_analysis.graph_editor import GraphEditor
-
+from ontology_processing.triples_to_owl import TriplesToOWL
+from morphological_analysis.pymorphy_wrap import MorphAnalyzer
 import random
 
 
@@ -19,6 +17,8 @@ class SemanticAnalysisWidget(QWidget):
         random.seed(version=2)
 
         self.__graph_editor = GraphEditor()
+
+        self.__morph = MorphAnalyzer()
 
         self.__btn_save = QPushButton("Экспорт..", self)
 
@@ -125,26 +125,45 @@ class SemanticAnalysisWidget(QWidget):
 
         triples = []
 
+        test = self.__graph_editor.get_all_connections()
+
         for connection in self.__graph_editor.get_all_connections():
             first_node = connection.get_first_node().get_text()
-            last_node = connection.get_last_node().get_text()
+            second_node = connection.get_last_node().get_text()
             link_type = connection.get_link_type()
 
-            triples.append([first_node, link_type, last_node])
+            # pos tagging
 
-            processed_nodes.append(first_node)
-            processed_nodes.append(last_node)
+            first_node_pos = [item.tag.POS for item in self.__morph.parse(first_node)]
+            second_node_pos = [item.tag.POS for item in self.__morph.parse(second_node)]
 
-            triples.append([first_node, link_type, last_node])
+            if 'NOUN' in first_node_pos and 'NOUN' in second_node_pos:
+                triples.append([first_node, link_type, second_node])
+
+                processed_nodes.append(first_node)
+                processed_nodes.append(second_node)
 
         for node in self.__graph_editor.get_all_nodes():
             if node.get_text() not in processed_nodes:
-                processed_nodes.append(node.get_text())
+                # pos tagging
+                node_pos = [item.tag.POS for item in self.__morph.parse(node)]
 
-                triples.append([node.get_text(), None, None])
+                if 'NOUN' in node_pos:
+                    processed_nodes.append(node.get_text())
+                    triples.append([node.get_text(), None, None])
 
-        owl_exporter = None
-        # TODO: OWL-processing
+        owl_exporter = TriplesToOWL(triples)
+
+        owl_exporter.processing()
+
+        filename = QFileDialog.getSaveFileName(None, 'Экспорт в OWL', "", "OWL files (*.owl)")
+
+        if len(filename[0]) <= 0:
+            filename = 'ontology.owl'
+
+        owl_exporter.to_file(filename[0])
+
+        # TODO: Fix bugs with unions & restrictions
         # TODO: node text validation (ignore prepositions, conjunctions, etc.)
 
     def load_diagram_from_graph(self, graph):
