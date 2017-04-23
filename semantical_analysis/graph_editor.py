@@ -7,6 +7,7 @@ from PyQt5.QtCore import QSize, QSizeF, QRect
 from PyQt5.QtGui import QPainter
 from semantical_analysis.block_item import Block, PortItem
 from semantical_analysis.connection_item import Connection, ArrowItem, LabelItem
+import math
 import random
 
 
@@ -61,8 +62,11 @@ class GraphEditor(QWidget):
 
         self.diagramScene.clear()
 
-        num_of_edges = len(graph.edges)
-        scale = 10
+        size = math.sqrt(len(graph.edges))
+
+        x_shift = 100
+        y_shift = 30
+        i = 0
 
         for edge in graph.edges:
             first_node = edge.from_node.text
@@ -73,14 +77,24 @@ class GraphEditor(QWidget):
             l = self.get_node_by_name(last_node)
 
             if f is None:
-                x = random.randint(-num_of_edges * scale, num_of_edges)
-                y = random.randint(-num_of_edges * scale, num_of_edges)
+                i += 1
+                x = x_shift * i
+                y = y_shift
                 f = self.add_node(x, y, first_node)
 
+            if i > size:
+                y_shift += 100
+                i = 0
+
             if l is None:
-                x = random.randint(-num_of_edges * scale, num_of_edges)
-                y = random.randint(-num_of_edges * scale, num_of_edges)
+                i += 1
+                x = x_shift * i
+                y = y_shift
                 l = self.add_node(x, y, last_node)
+
+            if i > size:
+                y_shift += 50
+                i = 0
 
             connection = Connection(f.get_random_port(), None, self)
             connection.set_link_type(link_type)
