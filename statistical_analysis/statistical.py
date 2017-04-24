@@ -103,7 +103,7 @@ class StatisticalAnalysis:
         """
         Returns the text category obtained using TF-IDF
         """
-        return self.__get_cyr_category_repr(self.__category)
+        return self.get_cyr_category_repr(self.__category)
 
     def train_classifier(self):
         """
@@ -180,7 +180,7 @@ class StatisticalAnalysis:
         return text_category
 
     @staticmethod
-    def __get_cyr_category_repr(category):
+    def get_cyr_category_repr(category):
         """
         Returns cyrillic string representation of text category
         :param category: one of TextCategory enumeration
@@ -214,12 +214,86 @@ class StatisticalAnalysis:
         elif category == TextCategory.SCIENCE:
             return "НАУКА"
 
-    def __update_classifier_data(self, text, category):
+    @staticmethod
+    def get_category_by_cyr_repr(category):
+        """
+        Returns text category by cyrillic string representation
+        """
+
+        if category == "ПОЛИТИКА":
+            return TextCategory.POLITICS
+        elif category == "КУЛЬТУРА":
+            return TextCategory.CULTURE
+        elif category == "СПОРТ":
+            return TextCategory.SPORT
+        elif category == "ЗДОРОВЬЕ":
+            return TextCategory.HEALTH
+        elif category == "ТЕХНОЛОГИИ":
+            return TextCategory.TECH
+        elif category == "ЭКОНОМИКА":
+            return TextCategory.ECONOMICS
+        elif category == "ИНЦИДЕНТ":
+            return TextCategory.INCIDENT
+        elif category == "ТРАНСПОРТ":
+            return TextCategory.AUTO
+        elif category == "ЖЕНЩИНЫ":
+            return TextCategory.WOMAN
+        elif category == "РЕКЛАМА":
+            return TextCategory.ADVERTISING
+        elif category == "СОЦИАЛЬНАЯ СФЕРА":
+            return TextCategory.SOCIAL
+        elif category == "НЕДВИЖИМОСТЬ":
+            return TextCategory.REALTY
+        elif category == "НАУКА":
+            return TextCategory.SCIENCE
+        else:
+            return None
+
+    @staticmethod
+    def get_sql_category_repr(category):
+        """
+        Returns cyrillic string representation of text category
+        :param category: one of TextCategory enumeration
+        :return: category string
+        """
+
+        if category == TextCategory.POLITICS:
+            return "politics"
+        elif category == TextCategory.CULTURE:
+            return "culture"
+        elif category == TextCategory.SPORT:
+            return "sport"
+        elif category == TextCategory.HEALTH:
+            return "health"
+        elif category == TextCategory.TECH:
+            return "tech"
+        elif category == TextCategory.ECONOMICS:
+            return "economics"
+        elif category == TextCategory.INCIDENT:
+            return "incident"
+        elif category == TextCategory.AUTO:
+            return "auto"
+        elif category == TextCategory.WOMAN:
+            return "woman"
+        elif category == TextCategory.ADVERTISING:
+            return "advertising"
+        elif category == TextCategory.SOCIAL:
+            return "social"
+        elif category == TextCategory.REALTY:
+            return "realty"
+        elif category == TextCategory.SCIENCE:
+            return "science"
+        else:
+            return "unknown"
+
+    def update_classifier_data(self, text, category):
         """
         Update rss-all.sqlite database
         :param text: mew text
         :param category: the category of the text
         """
+
+        category = self.get_sql_category_repr(category)
 
         db_name = self.__common_dir + 'rss-all.sqlite'
 
@@ -235,6 +309,7 @@ class StatisticalAnalysis:
 
             c.execute(sql_insert, target_text)
         finally:
+            conn.commit()
             conn.close()
 
             # update classifier

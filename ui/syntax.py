@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QStackedWidget, QLabel, QHBoxLayout, QWidget, QCheckBox, QListWidget, \
-    QFormLayout, QLineEdit, QRadioButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QHeaderView, QSplitter
+from PyQt5.QtWidgets import QHBoxLayout, QWidget, QListWidget, QMenu, QAction, QFileDialog, QSplitter
 from PyQt5.QtCore import Qt
 from PyQt5 import QtSvg
 from PyQt5.Qt import QByteArray
@@ -30,6 +29,9 @@ class SyntaxAnalysisWidget(QWidget):
         self.__left_bar = QListWidget(self)
         self.__svg_widget = QtSvg.QSvgWidget()
 
+        self.__left_bar.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.__left_bar.customContextMenuRequested.connect(self.__show_context_menu)
+
         self.__left_bar.currentRowChanged.connect(self.__display)  # change widget on a __stacked_widget
 
         # layout setup
@@ -39,6 +41,26 @@ class SyntaxAnalysisWidget(QWidget):
         splitter.addWidget(self.__svg_widget)
         hbox_layout.addWidget(splitter)
         self.setLayout(hbox_layout)
+
+    def __show_context_menu(self, point):
+        global_pos = self.__left_bar.mapToGlobal(point)
+
+        menu = QMenu()
+
+        menu.addAction("Сохранить как изображение")
+        menu.triggered[QAction].connect(self.__process_context_menu)
+
+        menu.exec(global_pos)
+
+    def __process_context_menu(self, menu_item):
+        if menu_item.text() == "Сохранить как изображение":
+
+            filename = QFileDialog.getSaveFileName(None, 'Сохранить SVG-граф', "", "svg files (*.svg)")
+
+            if len(filename[0]) > 4:
+
+                with open(filename[0], 'w', encoding='utf-8') as f:
+                    f.write(self.__svg_trees[self.__left_bar.currentRow()])
 
     def __display(self, i):
 

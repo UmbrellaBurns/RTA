@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QAction, QMenu, QWidget, QFileDialog
 from PyQt5.QtSvg import QSvgGenerator
 from PyQt5.QtCore import QSize, QRect
-from PyQt5.QtGui import QPainter
+from PyQt5.Qt import Qt
+from PyQt5.QtGui import QPainter, QPixmap, QImage, QColor
 from semantical_analysis.graph_editor import GraphEditor
 from ontology_processing.triples_to_owl import TriplesToOWL
 from morphological_analysis.pymorphy_wrap import MorphAnalyzer
@@ -26,6 +27,7 @@ class SemanticAnalysisWidget(QWidget):
         self.__action_to_owl = self.__export_menu.addAction("Web-онтология (owl-файл)")
         self.__action_to_svg = self.__export_menu.addAction("Файл векторной графики (svg-файл)")
         self.__action_to_cmap = self.__export_menu.addAction("Концептуальная карта (txt-файл)")
+        self.__action_to_png = self.__export_menu.addAction("Изображение")
 
         self.__btn_save.setMenu(self.__export_menu)
 
@@ -53,6 +55,31 @@ class SemanticAnalysisWidget(QWidget):
             self.export_to_svg()
         elif menu_item.text() == "Концептуальная карта (txt-файл)":
             self.export_to_cmap()
+        elif menu_item.text() == "Изображение":
+            self.export_to_png()
+
+    def export_to_png(self):
+        """
+        Graph editor's scene rendering & saving to png-file
+        """
+
+        filename = QFileDialog.getSaveFileName(None, 'Сохранить в формате png', "", "Images (*.png)")
+
+        if len(filename[0]) > 4:
+
+            w = self.__graph_editor.get_diagram_scene().width()
+            h = self.__graph_editor.get_diagram_scene().height()
+
+            image = QImage(w, h, QImage.Format_ARGB32_Premultiplied)
+            image.fill(Qt.white)
+            # pix = QPixmap(w, h)
+            painter = QPainter()
+            painter.begin(image)
+            painter.setRenderHint(QPainter.Antialiasing)
+            self.__graph_editor.get_diagram_scene().render(painter)
+            painter.end()
+
+            image.save(filename[0])
 
     def export_to_svg(self):
         """
@@ -62,24 +89,23 @@ class SemanticAnalysisWidget(QWidget):
 
         filename = QFileDialog.getSaveFileName(None, 'Сохранить SVG-граф', "", "svg files (*.svg)")
 
-        if len(filename[0]) <= 0:
-            filename = 'graph.svg'
+        if len(filename[0]) > 4:
 
-        svg = QSvgGenerator()
-        svg.setFileName(filename[0])
+            svg = QSvgGenerator()
+            svg.setFileName(filename[0])
 
-        w = self.__graph_editor.get_diagram_scene().width()
-        h = self.__graph_editor.get_diagram_scene().height()
+            w = self.__graph_editor.get_diagram_scene().width()
+            h = self.__graph_editor.get_diagram_scene().height()
 
-        svg.setSize(QSize(w, h))
-        svg.setViewBox(QRect(0, 0, w, h))
-        svg.setTitle('Semantic Graph')
-        svg.setDescription('File created by RTA')
+            svg.setSize(QSize(w, h))
+            svg.setViewBox(QRect(0, 0, w, h))
+            svg.setTitle('Semantic Graph')
+            svg.setDescription('File created by RTA')
 
-        painter = QPainter()
-        painter.begin(svg)
-        self.__graph_editor.get_diagram_scene().render(painter)
-        painter.end()
+            painter = QPainter()
+            painter.begin(svg)
+            self.__graph_editor.get_diagram_scene().render(painter)
+            painter.end()
 
     def export_to_cmap(self):
         """
@@ -89,31 +115,29 @@ class SemanticAnalysisWidget(QWidget):
 
         filename = QFileDialog.getSaveFileName(None, 'Экспорт в CMap', "", "Text files (*.txt)")
 
-        if len(filename[0]) <= 0:
-            filename = 'graph.txt'
+        if len(filename[0]) > 4:
+            out = ""
 
-        out = ""
+            processed_nodes = []
 
-        processed_nodes = []
+            for connection in self.__graph_editor.get_all_connections():
+                first_node = connection.get_first_node().get_text()
+                last_node = connection.get_last_node().get_text()
+                link_type = connection.get_link_type()
 
-        for connection in self.__graph_editor.get_all_connections():
-            first_node = connection.get_first_node().get_text()
-            last_node = connection.get_last_node().get_text()
-            link_type = connection.get_link_type()
+                processed_nodes.append(first_node)
+                processed_nodes.append(last_node)
 
-            processed_nodes.append(first_node)
-            processed_nodes.append(last_node)
+                out += '{0}  {1}  {2}'.format(first_node, link_type, last_node) + '\n'
 
-            out += '{0}  {1}  {2}'.format(first_node, link_type, last_node) + '\n'
+            for node in self.__graph_editor.get_all_nodes():
+                if node.get_text() not in processed_nodes:
+                    processed_nodes.append(node.get_text())
 
-        for node in self.__graph_editor.get_all_nodes():
-            if node.get_text() not in processed_nodes:
-                processed_nodes.append(node.get_text())
+                    out += node.get_text() + '\n'
 
-                out += node.get_text() + '\n'
-
-        with open(filename[0], 'w', encoding='utf-8') as f:
-            f.write(out)
+            with open(filename[0], 'w', encoding='utf-8') as f:
+                f.write(out)
 
     def export_to_owl(self):
         """
@@ -121,50 +145,49 @@ class SemanticAnalysisWidget(QWidget):
         :return: None
         """
 
-        processed_nodes = []
-
-        triples = []
-
-        test = self.__graph_editor.get_all_connections()
-
-        for connection in self.__graph_editor.get_all_connections():
-            first_node = connection.get_first_node().get_text()
-            second_node = connection.get_last_node().get_text()
-            link_type = connection.get_link_type()
-
-            # pos tagging
-
-            first_node_pos = [item.tag.POS for item in self.__morph.parse(first_node)]
-            second_node_pos = [item.tag.POS for item in self.__morph.parse(second_node)]
-
-            if 'NOUN' in first_node_pos and 'NOUN' in second_node_pos:
-                triples.append([first_node, link_type, second_node])
-
-                processed_nodes.append(first_node)
-                processed_nodes.append(second_node)
-
-        for node in self.__graph_editor.get_all_nodes():
-            if node.get_text() not in processed_nodes:
-                # pos tagging
-                node_pos = [item.tag.POS for item in self.__morph.parse(node)]
-
-                if 'NOUN' in node_pos:
-                    processed_nodes.append(node.get_text())
-                    triples.append([node.get_text(), None, None])
-
-        owl_exporter = TriplesToOWL(triples)
-
-        owl_exporter.processing()
-
         filename = QFileDialog.getSaveFileName(None, 'Экспорт в OWL', "", "OWL files (*.owl)")
 
-        if len(filename[0]) <= 0:
-            filename = 'ontology.owl'
+        if len(filename[0]) > 4:
 
-        owl_exporter.to_file(filename[0])
+            processed_nodes = []
+
+            triples = []
+
+            test = self.__graph_editor.get_all_connections()
+
+            for connection in self.__graph_editor.get_all_connections():
+                first_node = connection.get_first_node().get_text()
+                second_node = connection.get_last_node().get_text()
+                link_type = connection.get_link_type()
+
+                # pos tagging
+
+                first_node_pos = [item.tag.POS for item in self.__morph.parse(first_node)]
+                second_node_pos = [item.tag.POS for item in self.__morph.parse(second_node)]
+
+                if 'NOUN' in first_node_pos and 'NOUN' in second_node_pos:
+                    triples.append([first_node, link_type, second_node])
+
+                    processed_nodes.append(first_node)
+                    processed_nodes.append(second_node)
+
+            for node in self.__graph_editor.get_all_nodes():
+                if node.get_text() not in processed_nodes:
+                    # pos tagging
+                    node_pos = [item.tag.POS for item in self.__morph.parse(node.get_text())]
+
+                    if 'NOUN' in node_pos:
+                        processed_nodes.append(node.get_text())
+                        triples.append([node.get_text()])
+
+            owl_exporter = TriplesToOWL(triples)
+
+            owl_exporter.processing()
+
+            owl_exporter.to_file(filename[0])
 
         # TODO: Fix bugs with unions & restrictions
-        # TODO: node text validation (ignore prepositions, conjunctions, etc.)
+        # TODO: node text validation (ignore prepositions, conjunctions, etc.) - almost
 
     def load_diagram_from_graph(self, graph):
         # Read diagram from graph edges

@@ -21,6 +21,9 @@ class MorphAnalyzer:
 
             return target[parse_number]
 
+        def lat2cyr(self, grammeme):
+            return self.morph.lat2cyr(grammeme)
+
     __instance = None
 
     def __init__(self):

@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QVBoxLayout, QWidg
     QMenu, QAction, QStyle, qApp, QListWidget, QStackedWidget, QFormLayout, QSplitter, QFileDialog, QProgressBar
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
-from solarix_parser.syntax import SyntaxAnalyzer
 from graphematical_analysis.graphematical import GraphematicalAnalysis
 from graphematical_analysis.graphematical_markup import GraphematicalMarkup
 from ui.graphematical import GraphematicalAnalysisWidget
@@ -16,6 +15,8 @@ from ui.syntax import SyntaxAnalysisWidget
 from ui.progress_bar import ProgressBar
 from ui.semantical import SemanticAnalysisWidget
 from semantical_analysis.graph_model import Graph, Node
+from utils.linguistic import LinguisticAnalysisWidget
+from utils.text_classifier import TextClassificationWidget
 
 
 class MainWindow(QMainWindow):
@@ -39,9 +40,11 @@ class MainWindow(QMainWindow):
         self.__statistical = StatisticalAnalysis()  # statistical analyser
         self.__syntax = SyntaxAnalysis()  # syntax analyser
         self.__semantic = SemanticAnalysisWidget()  # semantic analyser
-        # self.__complex = None  # complex analyser, which includes all of previous
-        #
-        # self.__tasks_queue = None
+
+        # utils items
+        self.__utils_semantic = None
+        self.__utils_linguistic = None
+        self.__utils_text_classification = None
 
         # Setup Ui
         self.__setup_ui()
@@ -93,6 +96,14 @@ class MainWindow(QMainWindow):
         self.__action_semantic.setCheckable(True)
         self.__action_complex.setCheckable(True)
 
+        utils = bar.addMenu("Инструменты")
+        self.__action_sentiment = utils.addAction("Сентимент-анализ")
+        self.__action_graph_editor = utils.addAction("Редактор графов")
+        self.__action_linguistic_analyzer = utils.addAction("Лингвистический анализатор")
+        self.__action_text_classifier = utils.addAction("Классификатор текста")
+
+        utils.triggered[QAction].connect(self.__process_utils_menu)
+
         help = bar.addMenu("Помощь")
 
         # analysers creating & setup
@@ -135,6 +146,25 @@ class MainWindow(QMainWindow):
 
             # Start analysis
             self.__start_analysis()
+
+    def __process_utils_menu(self, menu_item):
+        if menu_item.text() == "Анализ Тональности":
+            pass
+        elif menu_item.text() == "Редактор графов":
+            # open an semantic analysis widget
+            self.__utils_semantic = SemanticAnalysisWidget()
+            self.__utils_semantic.setWindowTitle("Редактор графов")
+            self.__utils_semantic.show()
+
+        elif menu_item.text() == "Лингвистический анализатор":
+            # open an linguistic analysis widget
+            self.__utils_linguistic = LinguisticAnalysisWidget()
+            self.__utils_linguistic.show()
+
+        elif menu_item.text() == "Классификатор текста":
+            # open an text classifier widget
+            self.__utils_text_classification = TextClassificationWidget(classifier=self.__statistical)
+            self.__utils_text_classification.show()
 
     def __graphematical_analysis(self):
         """
