@@ -1,4 +1,5 @@
 from ontology_processing.owl_encoder import OWLEncoder
+from ontology_processing.utils import RelationsCompletionDialog
 from translator.translate import Translator
 from nltk.corpus import wordnet
 import pymorphy2
@@ -235,6 +236,10 @@ class TriplesToOWL:
                 if triple in target_restriction:
                     continue
 
+            if len(link_word) == 0:
+                unclassified_triples.append(triple)
+                continue
+
             # First stage: extracting CSC relations
             if self.__is_csc_relation(first_concept, link_word, second_concept):
                 # first concept is subclass of second concept
@@ -312,8 +317,28 @@ class TriplesToOWL:
                     else:
                         unclassified_triples.append(triple)
 
-        for triple in unclassified_triples:
-            print("Unclassified : {0} - {1} - {2}".format(triple[0], triple[1], triple[2]))
+        # unclassified triples
+        if len(unclassified_triples) > 0:
+            w = RelationsCompletionDialog(triples=unclassified_triples)
+            result = w.exec_()
+
+            if result == 1:
+                triples = w.relations()
+
+                for triple in triples['CSC']:
+                    self.__owl_encoder.add_csc_relation(class_name=triple[2], subclass_name=triple[0])
+
+                for triple in triples['CI']:
+                    self.__owl_encoder.add_ci_relation(concept_name=triple[0], instance=triple[2])
+
+                for triple in triples['CP']:
+                    self.__owl_encoder.add_cp_relation(concept_name=triple[0], property_name=triple[2])
+
+                for triple in triples['CPVD']:
+                    self.__owl_encoder.add_cpvd_relation(triple[0], triple[1], triple[2])
+
+                for triple in triples['CPVI']:
+                    self.__owl_encoder.add_cpvi_relation(triple[0], triple[1], triple[2])
 
             # TODO: исключать тройки, относящиеся к union или restriction из повторной обработки
             # TODO: чтобы не возникло ситуации, когда одна тройка обрабатывалась несколько раз
