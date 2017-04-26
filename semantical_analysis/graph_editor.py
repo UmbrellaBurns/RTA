@@ -65,7 +65,7 @@ class GraphEditor(QWidget):
         size = math.sqrt(len(graph.edges))
 
         x_shift = 100
-        y_shift = 30
+        y_shift = 100
         i = 0
 
         for edge in graph.edges:
@@ -93,7 +93,7 @@ class GraphEditor(QWidget):
                 l = self.add_node(x, y, last_node)
 
             if i > size:
-                y_shift += 50
+                y_shift += 100
                 i = 0
 
             connection = Connection(f.get_random_port(), None, self)

@@ -9,12 +9,13 @@ class Graph:
         self.nodes.append(node)
         self.notify_observers()
         # debug
-        print('---nodes---')
-
-        for node in self.nodes:
-            print(node.text)
-
-        print('---nodes---')
+        # print('---nodes---')
+        #
+        # for node in self.nodes:
+        #     print(node.text)
+        #
+        # print('---nodes---')
+        return self
 
     def remove_node(self, node):
         if node in self.nodes:
@@ -26,12 +27,12 @@ class Graph:
             self.notify_observers()
 
             # debug
-            print('---nodes---')
-
-            for node in self.nodes:
-                print(node.text)
-
-            print('---nodes---')
+            # print('---nodes---')
+            #
+            # for node in self.nodes:
+            #     print(node.text)
+            #
+            # print('---nodes---')
 
     def add_edge(self, from_node, to_node, text):
         if from_node in self.nodes and to_node in self.nodes:
@@ -40,13 +41,14 @@ class Graph:
                 self.notify_observers()
 
                 # debug
-                print('---all edges---')
-
-                for edge in self.edges:
-                    triple = edge.from_node.text + ' ' + edge.text + ' ' + edge.to_node.text
-                    print(triple)
-
-                print('---all edges---')
+                # print('---all edges---')
+                #
+                # for edge in self.edges:
+                #     triple = edge.from_node.text + ' ' + edge.text + ' ' + edge.to_node.text
+                #     print(triple)
+                #
+                # print('---all edges---')
+        return self
 
     def remove_edge(self, edge):
         if edge in self.edges:

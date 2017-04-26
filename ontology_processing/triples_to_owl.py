@@ -225,12 +225,24 @@ class TriplesToOWL:
 
             restriction_key = '_'.join(triple[:-1])
 
-            # if unions set or restriction set contains current triple - contrinue
-            target_union = self.__owl_encoder.get_union_by_link_word(link_word)
-            # target_restriction = self.__owl_encoder.get_restriction_by_key(restriction_key)
-            if target_union is not None:
-                if triple in target_union:
-                    continue
+            # # if unions set or restriction set contains current triple - contrinue
+            # target_union = self.__owl_encoder.get_union_by_link_word(link_word)
+            # # target_restriction = self.__owl_encoder.get_restriction_by_key(restriction_key)
+            # if target_union is not None:
+            #     if triple in target_union:
+            #
+            #         if link_word in self.__csc:
+            #             pass
+            #         elif link_word in self.__ci:
+            #             pass
+            #         elif link_word in self.__cp:
+            #             pass
+            #         elif link_word in self.__cpvd:
+            #             pass
+            #         elif link_word in self.__cpvi:
+            #             pass
+            #         else:
+            #             continue
 
             # if target_restriction is not None:
             #     if triple in target_restriction:
