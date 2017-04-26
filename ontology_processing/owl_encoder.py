@@ -382,7 +382,7 @@ class OWLEncoder:
 
         self.__content += self.__encode_all_unions()
         # self.__content += self.__encode_all_restrictions()
-        # TODO : Find the way to encode restrictions
+        # UPD: restrictions
 
         # CP
         for relation in self.__cp_relations:

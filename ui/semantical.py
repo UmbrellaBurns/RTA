@@ -128,7 +128,7 @@ class SemanticAnalysisWidget(QWidget):
                 processed_nodes.append(first_node)
                 processed_nodes.append(last_node)
 
-                out += '{0}  {1}  {2}'.format(first_node, link_type, last_node) + '\n'
+                out += '{0}	{1}	{2}'.format(first_node, link_type, last_node) + '\n'
 
             for node in self.__graph_editor.get_all_nodes():
                 if node.get_text() not in processed_nodes:
@@ -185,9 +185,6 @@ class SemanticAnalysisWidget(QWidget):
             owl_exporter.processing()
 
             owl_exporter.to_file(filename[0])
-
-        # TODO: Fix bugs with unions & restrictions
-        # TODO: node text validation (ignore prepositions, conjunctions, etc.) - almost
 
     def load_diagram_from_graph(self, graph):
         # Read diagram from graph edges

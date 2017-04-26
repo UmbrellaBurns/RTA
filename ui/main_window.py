@@ -2,19 +2,28 @@ from PyQt5.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QVBoxLayout, QWidg
     QMenu, QAction, QStyle, qApp, QListWidget, QStackedWidget, QFormLayout, QSplitter, QFileDialog, QProgressBar
 from PyQt5.QtCore import QSize
 from PyQt5.QtCore import Qt
+
+# analysis modules
 from graphematical_analysis.graphematical import GraphematicalAnalysis
 from graphematical_analysis.graphematical_markup import GraphematicalMarkup
-from ui.graphematical import GraphematicalAnalysisWidget
+
 from morphological_analysis.morphological import MorphologicalAnalysis
 from morphological_analysis.morphological_markup import MorphologicalMarkup
-from ui.morphological import MorphologicalAnalysisWidget
+
 from statistical_analysis.statistical import StatisticalAnalysis
-from ui.statistical import StatisticalAnalysisWidget
 from syntax_analysis.syntax import SyntaxAnalysis
+from semantical_analysis.graph_model import Graph, Node
+
+# ui
+from ui.graphematical import GraphematicalAnalysisWidget
+from ui.morphological import MorphologicalAnalysisWidget
+from ui.statistical import StatisticalAnalysisWidget
 from ui.syntax import SyntaxAnalysisWidget
 from ui.progress_bar import ProgressBar
 from ui.semantical import SemanticAnalysisWidget
-from semantical_analysis.graph_model import Graph, Node
+from ui.documentation import DocumentationWidget
+
+# utils
 from utils.linguistic import LinguisticAnalysisWidget
 from utils.text_classifier import TextClassificationWidget
 
@@ -32,6 +41,8 @@ class MainWindow(QMainWindow):
 
         self.__progress_bar = ProgressBar()
         self.__status_message = QLabel()
+
+        self.__docs_widget = DocumentationWidget()
 
         # __stacked_widget items
         self.__text_edit = QTextEdit()  # source text editor
@@ -69,7 +80,6 @@ class MainWindow(QMainWindow):
 
         self.__left_bar.currentRowChanged.connect(self.__display)  # change widget on a __stacked_widget
 
-        # creating menu
         # Setup Menu
         bar = self.menuBar()
 
@@ -77,17 +87,17 @@ class MainWindow(QMainWindow):
         file.addAction("Открыть")
         file.triggered[QAction].connect(self.__open_file)
 
-        analysis = bar.addMenu("Анализ")
-        self.__action_start = analysis.addAction("Начать анализ")
-        analysis.addSeparator()
-        self.__action_graphematical = analysis.addAction("Графематический анализ")
-        self.__action_morphological = analysis.addAction("Морфологический анализ")
-        self.__action_statistical = analysis.addAction("Статистический анализ")
-        self.__action_syntax = analysis.addAction("Синтаксический анализ")
-        self.__action_semantic = analysis.addAction("Семантический анализ")
-        self.__action_complex = analysis.addAction("Комплексный анализ")
+        analysis_menu = bar.addMenu("Анализ")
+        self.__action_start = analysis_menu.addAction("Начать анализ")
+        analysis_menu.addSeparator()
+        self.__action_graphematical = analysis_menu.addAction("Графематический анализ")
+        self.__action_morphological = analysis_menu.addAction("Морфологический анализ")
+        self.__action_statistical = analysis_menu.addAction("Статистический анализ")
+        self.__action_syntax = analysis_menu.addAction("Синтаксический анализ")
+        self.__action_semantic = analysis_menu.addAction("Семантический анализ")
+        self.__action_complex = analysis_menu.addAction("Комплексный анализ")
 
-        analysis.triggered[QAction].connect(self.__process_analysis_menu)
+        analysis_menu.triggered[QAction].connect(self.__process_analysis_menu)
 
         self.__action_graphematical.setCheckable(True)
         self.__action_morphological.setCheckable(True)
@@ -96,15 +106,18 @@ class MainWindow(QMainWindow):
         self.__action_semantic.setCheckable(True)
         self.__action_complex.setCheckable(True)
 
-        utils = bar.addMenu("Инструменты")
-        self.__action_sentiment = utils.addAction("Сентимент-анализ")
-        self.__action_graph_editor = utils.addAction("Редактор графов")
-        self.__action_linguistic_analyzer = utils.addAction("Лингвистический анализатор")
-        self.__action_text_classifier = utils.addAction("Классификатор текста")
+        utils_menu = bar.addMenu("Инструменты")
+        # self.__action_sentiment = utils_menu.addAction("Сентимент-анализ")
+        self.__action_graph_editor = utils_menu.addAction("Редактор графов")
+        self.__action_linguistic_analyzer = utils_menu.addAction("Лингвистический анализатор")
+        self.__action_text_classifier = utils_menu.addAction("Классификатор текста")
 
-        utils.triggered[QAction].connect(self.__process_utils_menu)
+        utils_menu.triggered[QAction].connect(self.__process_utils_menu)
 
-        help = bar.addMenu("Помощь")
+        help_menu = bar.addMenu("Помощь")
+        self.__action_docs = help_menu.addAction("Документация")
+
+        help_menu.triggered[QAction].connect(self.__process_help_menu)
 
         # analysers creating & setup
         self.__left_bar.addItem('Документ')
@@ -165,6 +178,10 @@ class MainWindow(QMainWindow):
             # open an text classifier widget
             self.__utils_text_classification = TextClassificationWidget(classifier=self.__statistical)
             self.__utils_text_classification.show()
+
+    def __process_help_menu(self, menu_item):
+        if menu_item.text() == "Документация":
+            self.__docs_widget.show()
 
     def __graphematical_analysis(self):
         """

@@ -93,14 +93,14 @@ class TriplesToOWL:
                 self.__link_words_set.add(triple[1])
 
                 # Add new restriction - the case when link-word connect concept c1 to several concepts
-
+                #
                 # Key : <Concept 1 Name>_<Link-word>
-                key = '_'.join(triple[:-1])
-
-                if key in self.__restrictions_dict.keys():
-                    self.__restrictions_dict[key].append(triple[2])
-                else:
-                    self.__restrictions_dict[key] = [triple[2]]
+                # key = '_'.join(triple[:-1])
+                #
+                # if key in self.__restrictions_dict.keys():
+                #     self.__restrictions_dict[key].append(triple[2])
+                # else:
+                #     self.__restrictions_dict[key] = [triple[2]]
 
                 if triple[1] not in self.__unions_dict.keys():
                     self.__unions_dict[triple[1]] = []
@@ -213,9 +213,9 @@ class TriplesToOWL:
                 self.__owl_encoder.add_union(key, self.__unions_dict[key])
 
         # Add all restrictions to the ontology
-        for key in self.__restrictions_dict:
-            if len(self.__restrictions_dict[key]) > 1:
-                self.__owl_encoder.add_restriction(key, self.__restrictions_dict[key])
+        # for key in self.__restrictions_dict:
+        #     if len(self.__restrictions_dict[key]) > 1:
+        #         self.__owl_encoder.add_restriction(key, self.__restrictions_dict[key])
 
         # Extract all relations
         for triple in self.__triples:
@@ -227,14 +227,14 @@ class TriplesToOWL:
 
             # if unions set or restriction set contains current triple - contrinue
             target_union = self.__owl_encoder.get_union_by_link_word(link_word)
-            target_restriction = self.__owl_encoder.get_restriction_by_key(restriction_key)
+            # target_restriction = self.__owl_encoder.get_restriction_by_key(restriction_key)
             if target_union is not None:
                 if triple in target_union:
                     continue
 
-            if target_restriction is not None:
-                if triple in target_restriction:
-                    continue
+            # if target_restriction is not None:
+            #     if triple in target_restriction:
+            #         continue
 
             if len(link_word) == 0:
                 unclassified_triples.append(triple)
