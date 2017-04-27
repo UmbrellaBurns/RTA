@@ -3,7 +3,6 @@ from ui.main_window import MainWindow
 from ui.splash_screen import SplashScreen
 from PyQt5.QtGui import QIcon
 import sys
-import threading
 
 
 def create_window(w):
@@ -13,10 +12,6 @@ def create_window(w):
 if __name__ == '__main__':
     if __name__ == "__main__":
         app = QApplication(sys.argv)
-
-        threads = 2
-
-        tasks = []
 
         s = SplashScreen("common/splash.gif")
         s.show()
@@ -31,6 +26,3 @@ if __name__ == '__main__':
         w.show()
         sys.exit(app.exec())
 
-        # TODO: SyntaxAnalysis: methods - get_syntax_xml_tree, get_raw_xml.
-        # TODO: ComplexAnalysis result - xml-doc, which contains document markup, including: text, sentences,
-        # TODO: syntax trees with nodes and their relations, semantic graph, text category and more

@@ -309,6 +309,14 @@ class MainWindow(QMainWindow):
 
         for triple in raw_triples:
             if triple[1] in ['SUBJECT', 'OBJECT', 'ATTRIBUTE', 'RIGHT_GENITIVE_OBJECT', 'RHEMA']:
+
+                if triple[1] == 'SUBJECT':
+                    triple[1] = 'субъект'
+                elif triple[1] in ['OBJECT', 'RIGHT_GENITIVE_OBJECT', 'RHEMA']:
+                    triple[1] = 'объект'
+                elif triple[1] == 'ATTRIBUTE':
+                    triple[1] = 'свойство'
+
                 triples.append([triple[0], triple[1], triple[2]])
 
         model = Graph()

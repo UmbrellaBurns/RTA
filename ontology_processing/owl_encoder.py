@@ -239,7 +239,7 @@ class OWLEncoder:
         class_property = class_property.replace(' ', '_')
 
         owl_pattern = "\n     <owl:ObjectProperty rdf:about= \"{0}#{2}\">\n" + \
-                      "     \t\t<rdf:type rdf:resource=\"&owl; FunctionalProperty\" />\n" + \
+                      "     \t\t<rdf:type rdf:resource=\"http://www.w3.org/2002/07/owl#FunctionalProperty\" />\n" + \
                       "     \t\t<rdfs:domain rdf:resource= \"{0}#{1}\" />\n" + \
                       "     \t\t<rdfs:range rdf:resource= \"{0}#{2}\" />\n" + \
                       "     </owl:ObjectProperty>\n"
@@ -336,6 +336,7 @@ class OWLEncoder:
         domain_pattern = ""
 
         for item in rdfs_domain:
+            item = item.replace(' ', '_')
             domain_pattern += "     \t\t\t\t<owl:Class rdf:about=\"#{0}\" />\n".format(item)
 
         owl_pattern += '\n' + domain_pattern
@@ -350,6 +351,7 @@ class OWLEncoder:
         range_pattern = ""
 
         for item in rdfs_range:
+            item = item.replace(' ', '_')
             range_pattern += "     \t\t\t\t<owl:Class rdf:about=\"#{0}\"/>\n".format(item)
 
         owl_pattern += range_pattern

@@ -73,8 +73,8 @@ class GraphEditor(QWidget):
             last_node = edge.to_node.text
             link_type = edge.text
 
-            f = self.get_node_by_name(first_node)
-            l = self.get_node_by_name(last_node)
+            f = None
+            l = None
 
             if f is None:
                 i += 1

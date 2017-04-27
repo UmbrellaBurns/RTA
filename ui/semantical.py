@@ -7,6 +7,7 @@ from semantical_analysis.graph_editor import GraphEditor
 from ontology_processing.triples_to_owl import TriplesToOWL
 from morphological_analysis.pymorphy_wrap import MorphAnalyzer
 import random
+import time
 
 
 class SemanticAnalysisWidget(QWidget):
@@ -66,7 +67,6 @@ class SemanticAnalysisWidget(QWidget):
         filename = QFileDialog.getSaveFileName(None, 'Сохранить в формате png', "", "Images (*.png)")
 
         if len(filename[0]) > 4:
-
             w = self.__graph_editor.get_diagram_scene().width()
             h = self.__graph_editor.get_diagram_scene().height()
 
@@ -90,7 +90,6 @@ class SemanticAnalysisWidget(QWidget):
         filename = QFileDialog.getSaveFileName(None, 'Сохранить SVG-граф', "", "svg files (*.svg)")
 
         if len(filename[0]) > 4:
-
             svg = QSvgGenerator()
             svg.setFileName(filename[0])
 
