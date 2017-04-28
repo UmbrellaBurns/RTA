@@ -1,9 +1,10 @@
+import sys
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QAction, QMenu, QWidget, QFileDialog
-from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QMessageBox, QHBoxLayout
 from PyQt5.QtSvg import QSvgGenerator
 from PyQt5.QtCore import QSize, QRect
 from PyQt5.Qt import Qt
-from PyQt5.QtGui import QPainter, QPixmap, QImage, QColor
+from PyQt5.QtGui import QPainter, QPixmap, QImage
 from semantical_analysis.graph_editor import GraphEditor
 from ontology_processing.triples_to_owl import TriplesToOWL
 from morphological_analysis.pymorphy_wrap import MorphAnalyzer
@@ -24,7 +25,6 @@ class SemanticAnalysisWidget(QWidget):
         self.__morph = MorphAnalyzer()
 
         self.__btn_save = QPushButton("Экспорт..", self)
-        self.__btn_delete = QPushButton("Правка", self)
 
         self.__export_menu = QMenu()
         self.__action_to_owl = self.__export_menu.addAction("Web-онтология (owl-файл)")
@@ -36,13 +36,6 @@ class SemanticAnalysisWidget(QWidget):
 
         self.__export_menu.triggered[QAction].connect(self.__process_export_menu)
 
-        self.__edit_menu = QMenu()
-        self.__action_remove_selected = self.__edit_menu.addAction("Удалить выбранные элементы")
-
-        self.__btn_delete.setMenu(self.__edit_menu)
-
-        self.__edit_menu.triggered[QAction].connect(self.__process_edit_menu)
-
         self.__setup_ui()
 
     def __setup_ui(self):
@@ -50,43 +43,12 @@ class SemanticAnalysisWidget(QWidget):
         vbox_layout = QVBoxLayout()
 
         self.__btn_save.setMaximumWidth(100)
-        self.__btn_delete.setMaximumWidth(100)
 
-        hbox_layout = QHBoxLayout()
-
-        spacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        hbox_layout.addWidget(self.__btn_save)
-        hbox_layout.addItem(spacer)
-        hbox_layout.addWidget(self.__btn_delete)
-
-        vbox_layout.addLayout(hbox_layout)
+        vbox_layout.addWidget(self.__btn_save)
 
         vbox_layout.addWidget(self.__graph_editor)
 
         self.setLayout(vbox_layout)
-
-    def __remove_selected_items(self):
-        msg = QMessageBox()
-
-        msg.setIcon(QMessageBox.Question)
-        msg.setText("Вы действительно хотите удалить выделенные блоки?")
-        msg.setInformativeText("Это действие нельзя отменить")
-        msg.setWindowTitle("Подтвердите действие")
-        msg.setDetailedText("При удалении блока удалятся все его соединения!")
-
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-
-        if len(self.__graph_editor.diagramScene.selectedItems()) > 0:
-            confirm = msg.exec_()
-
-            if confirm == QMessageBox.Ok:
-                self.__graph_editor.remove_selected_items()
-
-    def __process_edit_menu(self, menu_item):
-
-        if menu_item.text() == "Удалить выбранные элементы":
-            self.__remove_selected_items()
 
     def __process_export_menu(self, menu_item):
 
@@ -107,6 +69,7 @@ class SemanticAnalysisWidget(QWidget):
         filename = QFileDialog.getSaveFileName(None, 'Сохранить в формате png', "", "Images (*.png)")
 
         if len(filename[0]) > 4:
+
             w = self.__graph_editor.get_diagram_scene().width()
             h = self.__graph_editor.get_diagram_scene().height()
 
@@ -130,6 +93,7 @@ class SemanticAnalysisWidget(QWidget):
         filename = QFileDialog.getSaveFileName(None, 'Сохранить SVG-граф', "", "svg files (*.svg)")
 
         if len(filename[0]) > 4:
+
             svg = QSvgGenerator()
             svg.setFileName(filename[0])
 
@@ -186,13 +150,13 @@ class SemanticAnalysisWidget(QWidget):
 
         filename = QFileDialog.getSaveFileName(None, 'Экспорт в OWL', "", "OWL files (*.owl)")
 
+        time_stamp = time.time()
+
         if len(filename[0]) > 4:
 
             processed_nodes = []
 
             triples = []
-
-            test = self.__graph_editor.get_all_connections()
 
             for connection in self.__graph_editor.get_all_connections():
                 first_node = connection.get_first_node().get_text()
@@ -224,6 +188,8 @@ class SemanticAnalysisWidget(QWidget):
             owl_exporter.processing()
 
             owl_exporter.to_file(filename[0])
+
+        print("Finished: time - {}".format((time.time() - time_stamp)))
 
     def load_diagram_from_graph(self, graph):
         # Read diagram from graph edges

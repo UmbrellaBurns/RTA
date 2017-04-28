@@ -73,24 +73,21 @@ class GraphEditor(QWidget):
             last_node = edge.to_node.text
             link_type = edge.text
 
-            f = None
-            l = None
-
-            if f is None:
-                i += 1
-                x = x_shift * i
-                y = y_shift
-                f = self.add_node(x, y, first_node)
+            # First Node
+            i += 1
+            x = x_shift * i
+            y = y_shift
+            f = self.add_node(x, y, first_node)
 
             if i > size:
                 y_shift += 100
                 i = 0
 
-            if l is None:
-                i += 1
-                x = x_shift * i
-                y = y_shift
-                l = self.add_node(x, y, last_node)
+            # Last Node
+            i += 1
+            x = x_shift * i
+            y = y_shift
+            l = self.add_node(x, y, last_node)
 
             if i > size:
                 y_shift += 100
@@ -104,19 +101,19 @@ class GraphEditor(QWidget):
 
         # self.dump()
 
-        svg = QSvgGenerator()
-        svg.setFileName('graph.svg')
-        svg.setSize(QSize(self.diagramScene.width(), self.diagramScene.height()))
-        svg.setViewBox(QRect(0, 0, self.diagramScene.width(), self.diagramScene.height()))
-        svg.setTitle('Semantic Graph')
-        svg.setDescription('File created by RTA')
+        # svg = QSvgGenerator()
+        # svg.setFileName('graph.svg')
+        # svg.setSize(QSize(self.diagramScene.width(), self.diagramScene.height()))
+        # svg.setViewBox(QRect(0, 0, self.diagramScene.width(), self.diagramScene.height()))
+        # svg.setTitle('Semantic Graph')
+        # svg.setDescription('File created by RTA')
 
-        painter = QPainter()
-        painter.begin(svg)
-        self.diagramScene.render(painter)
-        painter.end()
+        # painter = QPainter()
+        # painter.begin(svg)
+        # self.diagramScene.render(painter)
+        # painter.end()
 
-        print('Finished')
+        print('Triples loading is finished')
 
     def scene_mouse_move_event(self, event):
         if self.started_connection:
@@ -160,6 +157,11 @@ class GraphEditor(QWidget):
 
         self.diagramScene.removeItem(node)
         self.nodes.remove(node)
+
+    def remove_selected_items(self):
+        for item in self.diagramScene.selectedItems():
+            if type(item) == Block:
+                self.remove_node(item)
 
     def mousePressEvent(self, event):
         if event.buttons() == QtCore.Qt.RightButton:
